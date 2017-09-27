@@ -75,13 +75,6 @@ public class MainActivity extends AppCompatActivity
 
 	public void sendFrames(View view)
 	{
-		/*if(!started)
-		{
-			started = true;
-			node = new Node(this);
-			node.start();
-			return;
-		}*/
 
 		node.broadcastFrame(new byte[1]);
 
@@ -93,13 +86,6 @@ public class MainActivity extends AppCompatActivity
 			node.broadcastFrame(frameData);
 		}
 
-		/*for(int i = 0; i < 100; ++i)
-		{
-			byte[] frameData = new byte[100 * 1024];
-			new Random().nextBytes(frameData);
-
-			node.broadcastFrame(frameData);
-		}*/
 	}
 
 	public void refreshPeers()
