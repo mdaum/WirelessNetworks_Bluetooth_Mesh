@@ -105,6 +105,13 @@ public class Node implements TransportListener
 			link.sendFrame(frameData);
 	}
 
+	public void sendFrame(byte[] frameData, Link link){
+		if(link ==null)return;
+		++framesCount;
+		activity.refreshFrames();
+		link.sendFrame(frameData);
+	}
+
 	//region TransportListener
 	@Override
 	public void transportNeedsActivity(Transport transport, ActivityCallback callback)
