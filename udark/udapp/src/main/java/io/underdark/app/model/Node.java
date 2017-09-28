@@ -6,6 +6,7 @@ import org.slf4j.impl.StaticLoggerBinder;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Random;
 
 import io.underdark.Underdark;
@@ -26,6 +27,7 @@ public class Node implements TransportListener
 
 	private ArrayList<Link> links = new ArrayList<>();
 	private int framesCount = 0;
+	public HashMap<Long, Link> idToLink = new HashMap<Long, Link>();
 
 	public Node(MainActivity activity)
 	{
@@ -123,14 +125,18 @@ public class Node implements TransportListener
 	public void transportLinkConnected(Transport transport, Link link)
 	{
 		links.add(link);
+		idToLink.put(link.getNodeId(),link);
 		activity.refreshPeers();
+		activity.refreshButtons();
 	}
 
 	@Override
 	public void transportLinkDisconnected(Transport transport, Link link)
 	{
 		links.remove(link);
+		idToLink.remove(link.getNodeId());
 		activity.refreshPeers();
+		activity.refreshButtons();
 
 		if(links.isEmpty())
 		{

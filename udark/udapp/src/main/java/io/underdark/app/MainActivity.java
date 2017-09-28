@@ -5,19 +5,25 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import io.underdark.app.log.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import io.underdark.app.model.Node;
+import io.underdark.transport.Link;
 
 public class MainActivity extends AppCompatActivity
 {
 	private TextView peersTextView;
 	private TextView framesTextView;
+	private ListView listView;
 
 	Node node;
 
@@ -29,6 +35,7 @@ public class MainActivity extends AppCompatActivity
 
 		peersTextView = (TextView) findViewById(R.id.peersTextView);
 		framesTextView = (TextView) findViewById(R.id.framesTextView);
+		listView = (ListView) findViewById(R.id.MemberList);
 
 		node = new Node(this);
 	}
@@ -39,6 +46,18 @@ public class MainActivity extends AppCompatActivity
 		super.onStart();
 		node.start();
 	}
+
+	protected View.OnClickListener MemberClicked = new View.OnClickListener(){
+		public void onClick(View v){ //send a frame to node represented by button pressed
+			Button b = (Button) v;
+			long id = Long.parseLong((String)b.getText());
+			Link l = node.idToLink.get(id);
+			byte[] frameData = new byte[1024];
+			new Random().nextBytes(frameData);
+			node.sendFrame(frameData,l);
+		}
+	};
+
 
 	@Override
 	protected void onStop()
@@ -107,6 +126,18 @@ public class MainActivity extends AppCompatActivity
 	public void showToast(String message){
 		Toast.makeText(this, message,
 				Toast.LENGTH_SHORT).show();
+	}
+
+
+	public void refreshButtons(){
+		List<Button> buttons = new ArrayList<Button>();
+		for (Link l : node.getLinks()) {
+			Button toAdd = new Button(this);
+			toAdd.setText(""+l.getNodeId());
+			toAdd.setOnClickListener(MemberClicked);
+			buttons.add(toAdd);
+		}
+		listView.setAdapter(new MemberListAdapter(this,listView.getId(),buttons));
 	}
 
 } // MainActivity
