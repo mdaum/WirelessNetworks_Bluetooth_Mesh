@@ -6,6 +6,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import io.underdark.app.log.*;
 
 import java.util.Random;
 
@@ -76,6 +79,9 @@ public class MainActivity extends AppCompatActivity
 	public void sendFrames(View view)
 	{
 
+		if(!Logger.writeToLog("a messsssssgae to log")){
+			showToast("There was an error creating the log file");
+		}
 		node.broadcastFrame(new byte[1]);
 
 		for(int i = 0; i < 2000; ++i)
@@ -97,4 +103,10 @@ public class MainActivity extends AppCompatActivity
 	{
 		framesTextView.setText(node.getFramesCount() + " frames");
 	}
+
+	public void showToast(String message){
+		Toast.makeText(this, message,
+				Toast.LENGTH_SHORT).show();
+	}
+
 } // MainActivity
