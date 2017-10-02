@@ -1,11 +1,16 @@
 package io.underdark.app;
 
+import android.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Layout;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,11 +24,12 @@ import java.util.Random;
 import io.underdark.app.model.Node;
 import io.underdark.transport.Link;
 
+
 public class MainActivity extends AppCompatActivity
 {
 	private TextView peersTextView;
 	private TextView framesTextView;
-	private ListView listView;
+    List<Button> buttons;
 
 	Node node;
 
@@ -35,9 +41,9 @@ public class MainActivity extends AppCompatActivity
 
 		peersTextView = (TextView) findViewById(R.id.peersTextView);
 		framesTextView = (TextView) findViewById(R.id.framesTextView);
-		listView = (ListView) findViewById(R.id.MemberList);
 
 		node = new Node(this);
+        buttons = new ArrayList<Button>();
 	}
 
 	@Override
@@ -130,14 +136,18 @@ public class MainActivity extends AppCompatActivity
 
 
 	public void refreshButtons(){
-		List<Button> buttons = new ArrayList<Button>();
-		for (Link l : node.getLinks()) {
+        LinearLayout layout = (LinearLayout)findViewById(R.id.ll);
+        for (Button b: buttons) {
+            layout.removeView(b);
+        }
+        buttons.clear();
+        for (Link l : node.getLinks()) {
 			Button toAdd = new Button(this);
 			toAdd.setText(""+l.getNodeId());
 			toAdd.setOnClickListener(MemberClicked);
 			buttons.add(toAdd);
+            layout.addView(toAdd,new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.WRAP_CONTENT));
 		}
-		listView.setAdapter(new MemberListAdapter(this,listView.getId(),buttons));
 	}
 
 } // MainActivity
