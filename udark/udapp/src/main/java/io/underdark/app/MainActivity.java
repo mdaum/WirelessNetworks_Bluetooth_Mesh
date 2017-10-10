@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity
 			Button b = (Button) v;
 			long id = Long.parseLong((String)b.getText());
 			Link l = node.idToLink.get(id);
-			byte[] frameData = new byte[1024];
+			byte[] frameData = new byte[1000000];
 			new Random().nextBytes(frameData);
 			node.sendFrame(frameData,l);
 		}
