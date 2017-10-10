@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity
 		public void onClick(View v){ //send a frame to node represented by button pressed
 			Button b = (Button) v;
 			long id = Long.parseLong((String)b.getText());
-			Link l = node.idToLink.get(id);
+			Link l = node.idToLink.get(node.routingTable.get(id).getRouterDest());//get routing dest of desired id and grab that link
 			byte[] frameData = new byte[1000000];
 			new Random().nextBytes(frameData);
 			node.sendFrame(frameData,l);
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity
 
 	public void refreshPeers()
 	{
-		peersTextView.setText(node.getLinks().size() + " connected");
+		peersTextView.setText(node.routingTable.size() + " connected");
 	}
 
 	public void refreshFrames()
@@ -141,9 +141,9 @@ public class MainActivity extends AppCompatActivity
             layout.removeView(b);
         }
         buttons.clear();
-        for (Link l : node.getLinks()) {
+        for (long id : node.routingTable.keySet()) {
 			Button toAdd = new Button(this);
-			toAdd.setText(""+l.getNodeId());
+			toAdd.setText(""+id);
 			toAdd.setOnClickListener(MemberClicked);
 			buttons.add(toAdd);
             layout.addView(toAdd,new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.WRAP_CONTENT));

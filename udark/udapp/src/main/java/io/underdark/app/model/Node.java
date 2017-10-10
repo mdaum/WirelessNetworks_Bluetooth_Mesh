@@ -127,6 +127,8 @@ public class Node implements TransportListener
 	{
 		links.add(link);
 		idToLink.put(link.getNodeId(),link);
+		routingTable.put(link.getNodeId(),new RoutingInfo(link.getNodeId(),1));
+		//TODO: now send your routing table to that person
 		activity.refreshPeers();
 		activity.refreshButtons();
 	}
@@ -135,6 +137,8 @@ public class Node implements TransportListener
 	public void transportLinkDisconnected(Transport transport, Link link)
 	{
 		links.remove(link);
+		routingTable.remove(link.getNodeId());
+		//TODO: now send the deletion event to all neighbors?
 		idToLink.remove(link.getNodeId());
 		activity.refreshPeers();
 		activity.refreshButtons();
