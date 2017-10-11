@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity
 {
 	private TextView peersTextView;
 	private TextView framesTextView;
+	private int frameSize = 1028;
     List<Button> buttons;
 
 	Node node;
@@ -54,16 +55,21 @@ public class MainActivity extends AppCompatActivity
 	}
 
 	protected View.OnClickListener MemberClicked = new View.OnClickListener(){
-		public void onClick(View v){ //send a frame to node represented by button pressed
+		public void onClick(View v){ //send a frame to node represented by button presses
 			Button b = (Button) v;
 			long id = Long.parseLong((String)b.getText());
 			Link l = node.idToLink.get(id);
-			byte[] frameData = new byte[1024];
-			new Random().nextBytes(frameData);
-			node.sendFrame(frameData,l);
+
+			TextView message = (TextView)findViewById(R.id.message);
+			//if it's empty or it just has the default text dont send anything
+			if(message.getText().toString().equals("Message") || message.getText().toString().equals("")){
+				showToast("Please enter a message to send");
+			}else {
+				String strData = message.getText().toString();
+				node.sendFrame(l, 1, strData);
+			}
 		}
 	};
-
 
 	@Override
 	protected void onStop()
@@ -132,6 +138,13 @@ public class MainActivity extends AppCompatActivity
 	public void showToast(String message){
 		Toast.makeText(this, message,
 				Toast.LENGTH_SHORT).show();
+	}
+
+	public void showText(String text){
+		LinearLayout layout = (LinearLayout)findViewById(R.id.ll);
+		TextView textView = (TextView)findViewById(R.id.textMessage);
+		textView.setText("");
+		textView.setText(text);
 	}
 
 
