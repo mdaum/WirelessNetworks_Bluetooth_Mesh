@@ -11,6 +11,7 @@ import java.util.Random;
 
 import io.underdark.Underdark;
 import io.underdark.app.MainActivity;
+import io.underdark.app.log.Logger;
 import io.underdark.transport.Link;
 import io.underdark.transport.Transport;
 import io.underdark.transport.TransportKind;
@@ -24,15 +25,17 @@ public class Node implements TransportListener
 	private MainActivity activity;
 	private long nodeId;
 	private Transport transport;
+	private Logger log;
 
 	private ArrayList<Link> links = new ArrayList<>();
 	private int framesCount = 0;
 	public HashMap<Long, Link> idToLink = new HashMap<Long, Link>();
 	public HashMap<Long,RoutingInfo> routingTable = new HashMap<Long,RoutingInfo>();
 
-	public Node(MainActivity activity)
+	public Node(MainActivity activity, Logger log)
 	{
 		this.activity = activity;
+		this.log = log;
 
 		do
 		{
@@ -108,11 +111,31 @@ public class Node implements TransportListener
 			link.sendFrame(frameData);
 	}
 
+
 	public void sendFrame(byte[] frameData, Link link){
 		if(link ==null)return;
 		++framesCount;
 		activity.refreshFrames();
 		link.sendFrame(frameData);
+	}
+
+	//protocolId: 0 = send routingtable, 1 = del destination, 2 = random message
+	public void sendFrame(Link link, int protocolId, String str){
+		String newStr = Integer.toString(protocolId) + str;
+		byte[] data = newStr.getBytes();
+		Logger.info("----SENDING STRING P ID: " + " "+protocolId);
+		Logger.info("----SENDING STRING---: "+ new String(data));
+		sendFrame(data, link);
+	}
+
+	public String encodeRoutingTable(){
+		String toRet = "";
+		for (Long id:routingTable.keySet()) {
+			toRet += id +"|";
+			toRet += routingTable.get(id).getRouterDest() + "|";
+			toRet += routingTable.get(id).getStep()+";";
+		}
+		return toRet.substring(0,toRet.length()-1); //chop off last ';'
 	}
 
 	//region TransportListener
@@ -128,9 +151,14 @@ public class Node implements TransportListener
 		links.add(link);
 		idToLink.put(link.getNodeId(),link);
 		routingTable.put(link.getNodeId(),new RoutingInfo(link.getNodeId(),1));
-		//TODO: now send your routing table to that person
 		activity.refreshPeers();
 		activity.refreshButtons();
+		String rt = encodeRoutingTable();
+		//now send encoded routing table to each adjacent node
+		for (Link l:
+			 links) {
+			sendFrame(l,0,rt);
+		}
 	}
 
 	@Override
@@ -138,7 +166,6 @@ public class Node implements TransportListener
 	{
 		links.remove(link);
 		routingTable.remove(link.getNodeId());
-		//TODO: now send the deletion event to all neighbors?
 		idToLink.remove(link.getNodeId());
 		activity.refreshPeers();
 		activity.refreshButtons();
@@ -148,13 +175,69 @@ public class Node implements TransportListener
 			framesCount = 0;
 			activity.refreshFrames();
 		}
+		//now send the deletion event to all adjacent nodes
+		for (Link l:
+			 links) {
+			sendFrame(l,1,""+link.getNodeId());
+		}
 	}
-
 	@Override
-	public void transportLinkDidReceiveFrame(Transport transport, Link link, byte[] frameData)
+	public void transportLinkDidReceiveFrame(Transport transport, Link sender, byte[] frameData)
 	{
 		++framesCount;
 		activity.refreshFrames();
+		//parse message type
+		Logger.info("-----RECEIVED FRAME----:" + framesCount+"");
+		String message = new String(frameData);
+		Logger.info("----FRAME DATA-------:" + sender.getNodeId() + "  " + message);
+		int mode = Integer.parseInt(message.substring(0, 1));
+		switch(mode){
+			case 0: //recieved a routing table
+				Logger.info("protocol id 0");
+				String[] entries = message.substring(1).split(";");
+				if(entries.length==0) entries[0] = message.substring(1);//if there is only one routing table entry
+				boolean routingChange = false;
+				for (String entry:
+					 entries) {
+					Logger.info("entry is: "+entry);
+					String[] drh = entry.split("|");//destination route hops
+					Logger.info("entry[0]: "+drh[0]); //todo fix splitting error!!!
+					//don't process if destination is already in your routing table
+					if(routingTable.containsKey(Long.parseLong(drh[0])))continue;
+					//otherwise add to your routing table the destination and mark sender as route to that destination
+					routingTable.put(Long.parseLong(drh[0]),new RoutingInfo(sender.getNodeId(),Integer.parseInt(drh[2])+1));
+					Logger.info("added dest "+Long.parseLong(drh[0])+" to routing table");
+					routingChange = true;
+				}
+				//if there was a routing change made, you must send your routing change to all links except for sender
+				if(routingChange) {
+					String toSend = encodeRoutingTable();
+					for (Link l :
+							links) {
+						if (l.getNodeId() == sender.getNodeId()) continue;
+						sendFrame(l, 0,toSend);
+					}
+				}
+				break;
+			case 1: //node left the mesh notification (outside of network)
+				Long toKill = Long.parseLong(message.substring(1));
+				Logger.info("protocol id 1");
+				if(!routingTable.containsKey(toKill))break;
+				Logger.info("Will delete node " + toKill + " from routing table");
+				routingTable.remove(toKill);
+				for (Link l:
+					 links) {
+					if(l.getNodeId() == sender.getNodeId()) continue;
+					sendFrame(l,1,""+toKill);
+				}
+				break;
+			case 2:
+				Logger.info("protocol id 2");
+				break; //nothing for now....this is just random data
+			default: activity.showToast("invalid frame recieved");
+		}
+
 	}
+
 	//endregion
 } // Node

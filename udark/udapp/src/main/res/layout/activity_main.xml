@@ -29,13 +29,4 @@
 		android:layout_centerHorizontal="true"
 		android:layout_marginTop="60dp"/>
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Send frames"
-        android:id="@+id/sendFramesButton"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="30dp"
-	    android:onClick="sendFrames"/>
-
 </LinearLayout>

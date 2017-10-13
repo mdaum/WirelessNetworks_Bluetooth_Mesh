@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity
 	private TextView peersTextView;
 	private TextView framesTextView;
     List<Button> buttons;
-
+	static Logger log;
 	Node node;
 
 	@Override
@@ -38,11 +38,10 @@ public class MainActivity extends AppCompatActivity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
+		log.init();
 		peersTextView = (TextView) findViewById(R.id.peersTextView);
 		framesTextView = (TextView) findViewById(R.id.framesTextView);
-
-		node = new Node(this);
+		node = new Node(this, log);
         buttons = new ArrayList<Button>();
 	}
 
@@ -58,9 +57,10 @@ public class MainActivity extends AppCompatActivity
 			Button b = (Button) v;
 			long id = Long.parseLong((String)b.getText());
 			Link l = node.idToLink.get(node.routingTable.get(id).getRouterDest());//get routing dest of desired id and grab that link
-			byte[] frameData = new byte[1000000];
+			byte[] frameData = new byte[100000];
 			new Random().nextBytes(frameData);
-			node.sendFrame(frameData,l);
+			byte[]toSend = ("2"+new String(frameData)).getBytes();
+			node.sendFrame(toSend,l);
 		}
 	};
 
@@ -100,24 +100,6 @@ public class MainActivity extends AppCompatActivity
 	}
 
 	private static boolean started = false;
-
-	public void sendFrames(View view)
-	{
-
-		if(!Logger.writeToLog("a messsssssgae to log")){
-			showToast("There was an error creating the log file");
-		}
-		node.broadcastFrame(new byte[1]);
-
-		for(int i = 0; i < 2000; ++i)
-		{
-			byte[] frameData = new byte[1024];
-			new Random().nextBytes(frameData);
-
-			node.broadcastFrame(frameData);
-		}
-
-	}
 
 	public void refreshPeers()
 	{
