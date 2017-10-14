@@ -200,10 +200,11 @@ public class Node implements TransportListener
 				for (String entry:
 					 entries) {
 					Logger.info("entry is: "+entry);
-					String[] drh = entry.split("|");//destination route hops
-					Logger.info("entry[0]: "+drh[0]); //todo fix splitting error!!!
-					//don't process if destination is already in your routing table
+					String[] drh = entry.split("\\|");//destination route hops
+					Logger.info("entry[0]: "+drh[0]);
+					//don't process if destination is already in your routing table, or is you!
 					if(routingTable.containsKey(Long.parseLong(drh[0])))continue;
+					if(Long.parseLong(drh[0]) == nodeId)continue;
 					//otherwise add to your routing table the destination and mark sender as route to that destination
 					routingTable.put(Long.parseLong(drh[0]),new RoutingInfo(sender.getNodeId(),Integer.parseInt(drh[2])+1));
 					Logger.info("added dest "+Long.parseLong(drh[0])+" to routing table");
@@ -214,7 +215,7 @@ public class Node implements TransportListener
 					String toSend = encodeRoutingTable();
 					for (Link l :
 							links) {
-						if (l.getNodeId() == sender.getNodeId()) continue;
+						if (l.getNodeId() == sender.getNodeId()) continue; // do not to ping sender back...superflous
 						sendFrame(l, 0,toSend);
 					}
 				}
