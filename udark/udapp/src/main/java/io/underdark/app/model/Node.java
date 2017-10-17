@@ -25,17 +25,15 @@ public class Node implements TransportListener
 	private MainActivity activity;
 	private long nodeId;
 	private Transport transport;
-	private Logger log;
 
 	private ArrayList<Link> links = new ArrayList<>();
 	private int framesCount = 0;
 	public HashMap<Long, Link> idToLink = new HashMap<Long, Link>();
 	public HashMap<Long,RoutingInfo> routingTable = new HashMap<Long,RoutingInfo>();
 
-	public Node(MainActivity activity, Logger log)
+	public Node(MainActivity activity)
 	{
 		this.activity = activity;
-		this.log = log;
 
 		do
 		{

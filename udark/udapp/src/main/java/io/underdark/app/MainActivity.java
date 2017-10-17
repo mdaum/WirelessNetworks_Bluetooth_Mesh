@@ -30,7 +30,6 @@ public class MainActivity extends AppCompatActivity
 	private TextView peersTextView;
 	private TextView framesTextView;
     List<Button> buttons;
-	static Logger log;
 	Node node;
 
 	@Override
@@ -38,10 +37,10 @@ public class MainActivity extends AppCompatActivity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		log.init();
+		Logger.init();
 		peersTextView = (TextView) findViewById(R.id.peersTextView);
 		framesTextView = (TextView) findViewById(R.id.framesTextView);
-		node = new Node(this, log);
+		node = new Node(this);
         buttons = new ArrayList<Button>();
 	}
 
@@ -50,6 +49,7 @@ public class MainActivity extends AppCompatActivity
 	{
 		super.onStart();
 		node.start();
+		Logger.info("STARTING\n");
 	}
 
 	protected View.OnClickListener MemberClicked = new View.OnClickListener(){

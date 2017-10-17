@@ -20,9 +20,16 @@ public class Logger {
         //create the directory if it doesn't exist
 
         File folder = new File(Environment.getExternalStorageDirectory().toString() + "/" + log_directory);
-        boolean success = true;
+        if(folder.isDirectory() && folder.listFiles().length!=0) {
+            for (File f :
+                    folder.listFiles()) {
+                f.delete();
+            }
+        }
         folder.delete();
+        boolean success = true;
         if (!folder.exists()) {
+            Log.v("Logger", "making underdark directory on device");
             success = folder.mkdir();
         }
         //if there was an error in creating the directory, return false
