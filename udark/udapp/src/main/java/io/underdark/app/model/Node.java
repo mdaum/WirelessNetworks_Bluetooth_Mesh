@@ -123,8 +123,8 @@ public class Node implements TransportListener
 	public void sendFrame(Link link, int protocolId, String str){
 		String newStr = Integer.toString(protocolId) + str;
 		byte[] data = newStr.getBytes();
-		Logger.info("----SENDING STRING P ID: " + " "+protocolId);
-		Logger.info("----SENDING STRING---: "+ new String(data));
+		Logger.info("SENDING TO " + link.getNodeId()+", "+"PID: " + " "+protocolId);
+		Logger.info("----DATA: ---: "+ new String(data) + "\n");
 		sendFrame(data, link);
 	}
 
@@ -187,13 +187,12 @@ public class Node implements TransportListener
 		++framesCount;
 		activity.refreshFrames();
 		//parse message type
-		Logger.info("-----RECEIVED FRAME----:" + framesCount+"");
 		String message = new String(frameData);
-		Logger.info("----FRAME DATA-------:" + sender.getNodeId() + "  " + message);
-		int mode = Integer.parseInt(message.substring(0, 1));
+        int mode = Integer.parseInt(message.substring(0, 1));
+        Logger.info("RECIEVING FROM " + sender.getNodeId()+", "+"PID: " + " "+mode);
+		Logger.info("----DATA----:" + message + "\n");
 		switch(mode){
 			case 0: //recieved a routing table
-				Logger.info("protocol id 0");
 				String[] entries = message.substring(1).split(";");
 				if(entries.length==0) entries[0] = message.substring(1);//if there is only one routing table entry
 				boolean routingChange = false;
@@ -222,7 +221,6 @@ public class Node implements TransportListener
 				break;
 			case 1: //node left the mesh notification (outside of network)
 				Long toKill = Long.parseLong(message.substring(1));
-				Logger.info("protocol id 1");
 				if(!routingTable.containsKey(toKill))break;
 				Logger.info("Will delete node " + toKill + " from routing table");
 				routingTable.remove(toKill);
@@ -233,7 +231,6 @@ public class Node implements TransportListener
 				}
 				break;
 			case 2:
-				Logger.info("protocol id 2");
 				break; //nothing for now....this is just random data
 			default: activity.showToast("invalid frame recieved");
 		}
