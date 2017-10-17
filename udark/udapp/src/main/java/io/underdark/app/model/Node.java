@@ -232,7 +232,9 @@ public class Node implements TransportListener
 				break; //nothing for now....this is just random data
 			default: activity.showToast("invalid frame recieved");
 		}
-
+		//finally refresh your buttons and peers
+		activity.refreshPeers();
+		activity.refreshButtons();
 	}
 
 	//endregion
