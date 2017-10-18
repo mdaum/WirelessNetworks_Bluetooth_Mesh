@@ -30,7 +30,6 @@ public class MainActivity extends AppCompatActivity
 	private TextView peersTextView;
 	private TextView framesTextView;
     List<Button> buttons;
-
 	Node node;
 
 	@Override
@@ -38,10 +37,9 @@ public class MainActivity extends AppCompatActivity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
+		Logger.init();
 		peersTextView = (TextView) findViewById(R.id.peersTextView);
 		framesTextView = (TextView) findViewById(R.id.framesTextView);
-
 		node = new Node(this);
         buttons = new ArrayList<Button>();
 	}
@@ -51,16 +49,18 @@ public class MainActivity extends AppCompatActivity
 	{
 		super.onStart();
 		node.start();
+		Logger.info("STARTING\n");
 	}
 
 	protected View.OnClickListener MemberClicked = new View.OnClickListener(){
 		public void onClick(View v){ //send a frame to node represented by button pressed
 			Button b = (Button) v;
 			long id = Long.parseLong((String)b.getText());
-			Link l = node.idToLink.get(id);
-			byte[] frameData = new byte[1024];
+			Link l = node.idToLink.get(node.routingTable.get(id).getRouterDest());//get routing dest of desired id and grab that link
+			byte[] frameData = new byte[100000];
 			new Random().nextBytes(frameData);
-			node.sendFrame(frameData,l);
+			byte[]toSend = ("2"+new String(frameData)).getBytes();
+			node.sendFrame(toSend,l);
 		}
 	};
 
@@ -101,27 +101,9 @@ public class MainActivity extends AppCompatActivity
 
 	private static boolean started = false;
 
-	public void sendFrames(View view)
-	{
-
-		if(!Logger.writeToLog("a messsssssgae to log")){
-			showToast("There was an error creating the log file");
-		}
-		node.broadcastFrame(new byte[1]);
-
-		for(int i = 0; i < 2000; ++i)
-		{
-			byte[] frameData = new byte[1024];
-			new Random().nextBytes(frameData);
-
-			node.broadcastFrame(frameData);
-		}
-
-	}
-
 	public void refreshPeers()
 	{
-		peersTextView.setText(node.getLinks().size() + " connected");
+		peersTextView.setText(node.routingTable.size() + " connected");
 	}
 
 	public void refreshFrames()
@@ -141,9 +123,9 @@ public class MainActivity extends AppCompatActivity
             layout.removeView(b);
         }
         buttons.clear();
-        for (Link l : node.getLinks()) {
+        for (long id : node.routingTable.keySet()) {
 			Button toAdd = new Button(this);
-			toAdd.setText(""+l.getNodeId());
+			toAdd.setText(""+id);
 			toAdd.setOnClickListener(MemberClicked);
 			buttons.add(toAdd);
             layout.addView(toAdd,new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.WRAP_CONTENT));
