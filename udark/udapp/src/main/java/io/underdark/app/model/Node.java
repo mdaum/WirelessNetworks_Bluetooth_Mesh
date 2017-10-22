@@ -1,6 +1,6 @@
 package io.underdark.app.model;
 
-import android.content.Context;
+import android.util.Log;
 
 import org.slf4j.impl.StaticLoggerBinder;
 
@@ -97,6 +97,10 @@ public class Node implements TransportListener
 		return framesCount;
 	}
 
+	public long getId(){
+		return this.nodeId;
+	}
+
 	public void broadcastFrame(byte[] frameData)
 	{
 		if(links.isEmpty())
@@ -119,9 +123,10 @@ public class Node implements TransportListener
 
 	//protocolId: 0 = send routingtable, 1 = del destination, 2 = random message
 	public void sendFrame(Link link, int protocolId, String str){
-		String newStr = Integer.toString(protocolId) + str;
+		//protocol id | sender id | reciever id | payload
+		String newStr = Integer.toString(protocolId) + "|" + link.getNodeId() + "|" + this.nodeId + "|" + str;
 		byte[] data = newStr.getBytes();
-		Logger.info("SENDING TO " + link.getNodeId()+", "+"PID: " + " "+protocolId);
+		Logger.info("SENDING TO " + link.getNodeId()+", "+"protocol: " + " "+protocolId);
 		Logger.info("----DATA: ---: "+ new String(data) + "\n");
 		sendFrame(data, link);
 	}
@@ -151,12 +156,12 @@ public class Node implements TransportListener
 		routingTable.put(link.getNodeId(),new RoutingInfo(link.getNodeId(),1));
 		activity.refreshPeers();
 		activity.refreshButtons();
-		String rt = encodeRoutingTable();
+		//String rt = encodeRoutingTable();
 		//now send encoded routing table to each adjacent node
-		for (Link l:
+		/*for (Link l:
 			 links) {
 			sendFrame(l,0,rt);
-		}
+		}*/
 	}
 
 	@Override
@@ -175,7 +180,7 @@ public class Node implements TransportListener
 		}
 		//now send the deletion event to all adjacent nodes
 		for (Link l:
-			 links) {
+				links) {
 			sendFrame(l,1,""+link.getNodeId());
 		}
 	}
@@ -183,21 +188,31 @@ public class Node implements TransportListener
 	public void transportLinkDidReceiveFrame(Transport transport, Link sender, byte[] frameData)
 	{
 		++framesCount;
+		Log.v("-----RECEIVED FRAME----",framesCount+"");
 		activity.refreshFrames();
+
+		//Log.v("----FRAME DATA-------", link.getNodeId() + "  " + new String(frameData));
+		//activity.showText(link.getNodeId() + ":" + new String(frameData));
+
 		//parse message type
 		String message = new String(frameData);
-        int mode = Integer.parseInt(message.substring(0, 1));
-        Logger.info("RECIEVING FROM " + sender.getNodeId()+", "+"PID: " + " "+mode);
+		int mode = Integer.parseInt(message.substring(0, 1));
+		Logger.info("RECIEVING FROM " + sender.getNodeId()+", "+"PID: " + " "+mode);
 		Logger.info("----DATA----:" + message + "\n");
+		Log.v("CURENT MODE", mode+"");
 		switch(mode){
+
 			case 0: //recieved a routing table
 				String[] entries = message.substring(1).split(";");
 				if(entries.length==0) entries[0] = message.substring(1);//if there is only one routing table entry
 				boolean routingChange = false;
 				for (String entry:
-					 entries) {
+						entries) {
 					Logger.info("entry is: "+entry);
 					String[] drh = entry.split("\\|");//destination route hops
+					for(int i = 0; i < drh.length; i++) {
+						Log.v("PRITNING DRH", drh[i].toString());
+					}
 					Logger.info("entry[0]: "+drh[0]);
 					//don't process if destination is already in your routing table, or is you!
 					if(routingTable.containsKey(Long.parseLong(drh[0])))continue;
@@ -218,18 +233,30 @@ public class Node implements TransportListener
 				}
 				break;
 			case 1: //node left the mesh notification (outside of network)
-				Long toKill = Long.parseLong(message.substring(1));
+
+				String[] messagePieces = message.split("\\|");
+
+
+				Long toKill = Long.parseLong(messagePieces[1]);
 				if(!routingTable.containsKey(toKill))break;
 				Logger.info("Will delete node " + toKill + " from routing table");
 				routingTable.remove(toKill);
 				for (Link l:
-					 links) {
+						links) {
 					if(l.getNodeId() == sender.getNodeId()) continue;
 					sendFrame(l,1,""+toKill);
 				}
 				break;
+			//actual message, could be random or typed
 			case 2:
-				break; //nothing for now....this is just random data
+				messagePieces = message.split("\\|");
+				Long messageReciever = Long.parseLong(messagePieces[1]);
+				if(this.nodeId == messageReciever){
+					String messageText = messagePieces[messagePieces.length-1];
+					this.activity.showText(messageText);
+				}
+				break; //print the random bytes recieved
+
 			default: activity.showToast("invalid frame recieved");
 		}
 		//finally refresh your buttons and peers

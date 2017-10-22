@@ -1,32 +1,68 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:tools="http://schemas.android.com/tools"
-				android:id="@+id/ll"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:paddingLeft="@dimen/activity_horizontal_margin"
-                android:paddingRight="@dimen/activity_horizontal_margin"
-                android:paddingTop="@dimen/activity_vertical_margin"
-                android:paddingBottom="@dimen/activity_vertical_margin"
-                tools:context=".MainActivity"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:id="@+id/ll"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:paddingLeft="@dimen/activity_horizontal_margin"
+	android:paddingRight="@dimen/activity_horizontal_margin"
+	android:paddingTop="@dimen/activity_vertical_margin"
+	android:paddingBottom="@dimen/activity_vertical_margin"
+	tools:context=".MainActivity"
 	android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/peersTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="0 connected"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="10dp"/>
+	<TextView
+		android:id="@+id/peersTextView"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:textAppearance="?android:attr/textAppearanceLarge"
+		android:text="0 connected"
+		android:layout_alignParentTop="true"
+		android:layout_centerHorizontal="true"
+		android:layout_marginTop="10dp"/>
+
+	<EditText
+		android:id="@+id/messageOrBytes"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:ems="10"
+		android:inputType="text"
+		android:text="Message"
+		app:backgroundTint="@drawable/abc_btn_check_to_on_mtrl_000" />
 
 	<TextView
 		android:id="@+id/framesTextView"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:textAppearance="?android:attr/textAppearanceLarge"
-		android:text="0 frames"
 		android:layout_centerHorizontal="true"
-		android:layout_marginTop="60dp"/>
+		android:layout_marginTop="60dp"
+		android:text="0 frames"
+		android:textAppearance="@style/TextAppearance.AppCompat.Small" />
 
+	<Switch
+		android:id="@+id/randomBytes"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="Random Bytes"
+		android:checked="false" />
+
+	<Button
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="Send frames"
+		android:id="@+id/sendFramesButton"
+		android:layout_centerHorizontal="true"
+		android:layout_marginTop="30dp"
+		android:onClick="sendFrames"/>
+
+	<TextView
+		android:id="@+id/textMessage"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content" />
 </LinearLayout>
+
+</ScrollView>
