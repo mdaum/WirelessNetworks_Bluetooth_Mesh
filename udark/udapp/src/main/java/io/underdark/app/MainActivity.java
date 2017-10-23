@@ -1,17 +1,17 @@
 package io.underdark.app;
 
 import android.app.ActionBar;
+import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Layout;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.ListView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,7 +29,8 @@ public class MainActivity extends AppCompatActivity
 {
 	private TextView peersTextView;
 	private TextView framesTextView;
-    List<Button> buttons;
+	private int frameSize = 1028;
+	List<Button> buttons;
 	Node node;
 
 	@Override
@@ -41,7 +42,8 @@ public class MainActivity extends AppCompatActivity
 		peersTextView = (TextView) findViewById(R.id.peersTextView);
 		framesTextView = (TextView) findViewById(R.id.framesTextView);
 		node = new Node(this);
-        buttons = new ArrayList<Button>();
+		buttons = new ArrayList<Button>();
+		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
 	}
 
 	@Override
@@ -53,17 +55,36 @@ public class MainActivity extends AppCompatActivity
 	}
 
 	protected View.OnClickListener MemberClicked = new View.OnClickListener(){
-		public void onClick(View v){ //send a frame to node represented by button pressed
+		public void onClick(View v){ //send a frame to node represented by button presses
 			Button b = (Button) v;
 			long id = Long.parseLong((String)b.getText());
+
 			Link l = node.idToLink.get(node.routingTable.get(id).getRouterDest());//get routing dest of desired id and grab that link
-			byte[] frameData = new byte[100000];
-			new Random().nextBytes(frameData);
-			byte[]toSend = ("2"+new String(frameData)).getBytes();
-			node.sendFrame(toSend,l);
+
+			TextView message = (TextView)findViewById(R.id.messageOrBytes);
+			Switch randomBytes = (Switch) findViewById(R.id.randomBytes);
+			//if the randombytes switch is activated send a sequence of random bytes
+			if(randomBytes.isChecked()){
+				if(message.getText().toString().equals("Message") || message.getText().toString().equals("")){
+					showToast("Please enter an amount of bytes (MB) to send");
+				}else {
+					long length = Long.parseLong(message.getText().toString()) * 1000000; //needs to be long in case we want to send < 1 MB
+					byte[] frameData = new byte[(int)length];
+					new Random().nextBytes(frameData);
+					node.sendFrame(l,node.getId(), id, 2, new String(frameData));
+				}
+				//otherwise send a message
+			}else{
+				if(message.getText().toString().equals("Message") || message.getText().toString().equals("")){
+					showToast("Please enter a message to send");
+				}else {
+					String strData = message.getText().toString();
+					node.sendFrame(l,node.getId(), id,  2, strData);
+				}
+			}
+
 		}
 	};
-
 
 	@Override
 	protected void onStop()
@@ -116,19 +137,29 @@ public class MainActivity extends AppCompatActivity
 				Toast.LENGTH_SHORT).show();
 	}
 
+	public void showText(String text){
+		LinearLayout layout = (LinearLayout)findViewById(R.id.ll);
+		TextView textView = (TextView)findViewById(R.id.textMessage);
+		textView.setText("");
+		textView.setText(text);
+	}
+
 
 	public void refreshButtons(){
-        LinearLayout layout = (LinearLayout)findViewById(R.id.ll);
-        for (Button b: buttons) {
-            layout.removeView(b);
-        }
-        buttons.clear();
-        for (long id : node.routingTable.keySet()) {
+		LinearLayout layout = (LinearLayout)findViewById(R.id.ll);
+		for (Button b: buttons) {
+			layout.removeView(b);
+		}
+		buttons.clear();
+		for (long id : node.routingTable.keySet()) {
 			Button toAdd = new Button(this);
 			toAdd.setText(""+id);
+			if(id != node.routingTable.get(id).getRouterDest()){
+				toAdd.setBackgroundColor(Color.BLUE);
+			}
 			toAdd.setOnClickListener(MemberClicked);
 			buttons.add(toAdd);
-            layout.addView(toAdd,new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.WRAP_CONTENT));
+			layout.addView(toAdd,new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.WRAP_CONTENT));
 		}
 	}
 
