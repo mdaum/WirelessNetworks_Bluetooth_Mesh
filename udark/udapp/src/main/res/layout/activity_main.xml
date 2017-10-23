@@ -50,15 +50,6 @@
 		android:text="Random Bytes"
 		android:checked="false" />
 
-	<Button
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:text="Send frames"
-		android:id="@+id/sendFramesButton"
-		android:layout_centerHorizontal="true"
-		android:layout_marginTop="30dp"
-		android:onClick="sendFrames"/>
-
 	<TextView
 		android:id="@+id/textMessage"
 		android:layout_width="match_parent"

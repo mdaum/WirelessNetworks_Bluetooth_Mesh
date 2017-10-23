@@ -121,15 +121,26 @@ public class Node implements TransportListener
 		link.sendFrame(frameData);
 	}
 
-	//protocolId: 0 = send routingtable, 1 = del destination, 2 = random message
-	public void sendFrame(Link link, int protocolId, String str){
-		//protocol id | sender id | reciever id | payload
-		String newStr = Integer.toString(protocolId) + "|" + link.getNodeId() + "|" + this.nodeId + "|" + str;
-		byte[] data = newStr.getBytes();
+	//protocolId: 0 = send routingtable, 1 = del destination
+	public void sendFrame(Link link, int protocolId, String str){ // this one is only used for protocols 0 and 1
+		String newStr = Integer.toString(protocolId) + str;
+        byte[] data = newStr.getBytes();
 		Logger.info("SENDING TO " + link.getNodeId()+", "+"protocol: " + " "+protocolId);
 		Logger.info("----DATA: ---: "+ new String(data) + "\n");
 		sendFrame(data, link);
 	}
+    //protocolId: 2 = random message|writtenMessage
+    public void sendFrame(Link link, long intendedSender, long intendedReciever, int protocolId, String str){ // only used for protocols > 1
+        //protocol id | sender id | reciever id | payload       when in protocol > 1
+        String newStr = Integer.toString(protocolId) + "|" + intendedSender + "|" + intendedReciever + "|" + str;
+        byte[] data = newStr.getBytes();
+        Logger.info("SENDING TO " + link.getNodeId()+", "+"protocol: " + " "+protocolId);
+        String toLog;
+        if(str.getBytes().length > 1000000) toLog = "A random byte-string of size "+ data.length + "\n";
+        else toLog = new String(data)  + "\n";
+        Logger.info("----DATA: ---: "+ toLog);
+        sendFrame(data, link);
+    }
 
 	public String encodeRoutingTable(){
 		String toRet = "";
@@ -156,12 +167,12 @@ public class Node implements TransportListener
 		routingTable.put(link.getNodeId(),new RoutingInfo(link.getNodeId(),1));
 		activity.refreshPeers();
 		activity.refreshButtons();
-		//String rt = encodeRoutingTable();
+		String rt = encodeRoutingTable();
 		//now send encoded routing table to each adjacent node
-		/*for (Link l:
+		for (Link l:
 			 links) {
 			sendFrame(l,0,rt);
-		}*/
+		}
 	}
 
 	@Override
@@ -188,18 +199,19 @@ public class Node implements TransportListener
 	public void transportLinkDidReceiveFrame(Transport transport, Link sender, byte[] frameData)
 	{
 		++framesCount;
-		Log.v("-----RECEIVED FRAME----",framesCount+"");
+		Logger.info("-----RECEIVED FRAME----"+ " "+framesCount+"");
 		activity.refreshFrames();
 
-		//Log.v("----FRAME DATA-------", link.getNodeId() + "  " + new String(frameData));
-		//activity.showText(link.getNodeId() + ":" + new String(frameData));
 
 		//parse message type
 		String message = new String(frameData);
 		int mode = Integer.parseInt(message.substring(0, 1));
-		Logger.info("RECIEVING FROM " + sender.getNodeId()+", "+"PID: " + " "+mode);
-		Logger.info("----DATA----:" + message + "\n");
-		Log.v("CURENT MODE", mode+"");
+		Logger.info("RECIEVING FROM " + sender.getNodeId());
+		Logger.info("CURENT MODE: "+ mode+"");
+		String toLog;
+		if(frameData.length > 1000000) toLog = "A random byte-string of size "+ frameData.length;
+		else toLog = message;
+		Logger.info("----DATA: ---: "+ toLog);
 		switch(mode){
 
 			case 0: //recieved a routing table
@@ -210,16 +222,17 @@ public class Node implements TransportListener
 						entries) {
 					Logger.info("entry is: "+entry);
 					String[] drh = entry.split("\\|");//destination route hops
-					for(int i = 0; i < drh.length; i++) {
-						Log.v("PRITNING DRH", drh[i].toString());
-					}
-					Logger.info("entry[0]: "+drh[0]);
+					Logger.info("DRH[0]: "+drh[0]);
+					Logger.info("DRH[1]: "+drh[1]);
+					Logger.info("DRH[2]: "+drh[2]);
 					//don't process if destination is already in your routing table, or is you!
-					if(routingTable.containsKey(Long.parseLong(drh[0])))continue;
-					if(Long.parseLong(drh[0]) == nodeId)continue;
+					long dest = Long.parseLong(drh[0]);
+					if(routingTable.containsKey(dest))continue;
+					if(dest == nodeId)continue;
 					//otherwise add to your routing table the destination and mark sender as route to that destination
-					routingTable.put(Long.parseLong(drh[0]),new RoutingInfo(sender.getNodeId(),Integer.parseInt(drh[2])+1));
-					Logger.info("added dest "+Long.parseLong(drh[0])+" to routing table");
+					routingTable.put(dest,new RoutingInfo(sender.getNodeId(),Integer.parseInt(drh[2])+1));
+					Logger.info("added dest "+dest+" to routing table");
+					Logger.info("it's mapped routingInfo is "+routingTable.get(dest));
 					routingChange = true;
 				}
 				//if there was a routing change made, you must send your routing change to all links except for sender
@@ -233,11 +246,7 @@ public class Node implements TransportListener
 				}
 				break;
 			case 1: //node left the mesh notification (outside of network)
-
-				String[] messagePieces = message.split("\\|");
-
-
-				Long toKill = Long.parseLong(messagePieces[1]);
+				Long toKill = Long.parseLong(message.substring(1));
 				if(!routingTable.containsKey(toKill))break;
 				Logger.info("Will delete node " + toKill + " from routing table");
 				routingTable.remove(toKill);
@@ -249,13 +258,22 @@ public class Node implements TransportListener
 				break;
 			//actual message, could be random or typed
 			case 2:
-				messagePieces = message.split("\\|");
-				Long messageReciever = Long.parseLong(messagePieces[1]);
-				if(this.nodeId == messageReciever){
+				String [] messagePieces = message.split("\\|");
+				Long intendedSender = Long.parseLong(messagePieces[1]);
+                Long intendedReciever = Long.parseLong(messagePieces[2]);
+				if(this.nodeId == intendedReciever){
 					String messageText = messagePieces[messagePieces.length-1];
-					this.activity.showText(messageText);
+					Logger.info("Message size is "+frameData.length);
+                    if(frameData.length > 1000000) this.activity.showText("A random string with byte size "+frameData.length + " was recieved from "+intendedSender);
+					else this.activity.showText(intendedSender+": "+messageText);
 				}
-				break; //print the random bytes recieved
+				else{ //need to forward this message on instead of showing it
+					Logger.info("we are not the intended reciever for this message.");
+                    Link route = idToLink.get(routingTable.get(intendedReciever).getRouterDest());
+					Logger.info("going to forward message on to "+route.getNodeId());
+                    route.sendFrame(frameData); //forward the message on....don't need to reprocess info
+                }
+				break;
 
 			default: activity.showToast("invalid frame recieved");
 		}

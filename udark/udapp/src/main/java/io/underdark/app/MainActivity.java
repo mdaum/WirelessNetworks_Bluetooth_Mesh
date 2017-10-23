@@ -59,26 +59,6 @@ public class MainActivity extends AppCompatActivity
 			Button b = (Button) v;
 			long id = Long.parseLong((String)b.getText());
 
-			/*Link l = node.idToLink.get(id);
-
-			TextView message = (TextView)findViewById(R.id.message);
-			//if it's empty or it just has the default text dont send anything
-			if(message.getText().toString().equals("Message") || message.getText().toString().equals("")){
-				showToast("Please enter a message to send");
-			}else {
-				String strData = message.getText().toString();
-				node.sendFrame(l, 1, strData);
-			}*/
-
-			/*Link l = node.idToLink.get(node.routingTable.get(id).getRouterDest());//get routing dest of desired id and grab that link
-			byte[] frameData = new byte[100000];
-			new Random().nextBytes(frameData);
-			byte[]toSend = ("2"+new String(frameData)).getBytes();
-			node.sendFrame(toSend,l);*/
-
-
-			long myId = node.getId();
-
 			Link l = node.idToLink.get(node.routingTable.get(id).getRouterDest());//get routing dest of desired id and grab that link
 
 			TextView message = (TextView)findViewById(R.id.messageOrBytes);
@@ -86,12 +66,12 @@ public class MainActivity extends AppCompatActivity
 			//if the randombytes switch is activated send a sequence of random bytes
 			if(randomBytes.isChecked()){
 				if(message.getText().toString().equals("Message") || message.getText().toString().equals("")){
-					showToast("Please enter an amount of bytes to send");
+					showToast("Please enter an amount of bytes (MB) to send");
 				}else {
-					int length = Integer.parseInt(message.getText().toString());
-					byte[] frameData = new byte[length];
+					long length = Long.parseLong(message.getText().toString()) * 1000000; //needs to be long in case we want to send < 1 MB
+					byte[] frameData = new byte[(int)length];
 					new Random().nextBytes(frameData);
-					node.sendFrame(l, 2, new String(frameData));
+					node.sendFrame(l,node.getId(), id, 2, new String(frameData));
 				}
 				//otherwise send a message
 			}else{
@@ -99,11 +79,10 @@ public class MainActivity extends AppCompatActivity
 					showToast("Please enter a message to send");
 				}else {
 					String strData = message.getText().toString();
-					node.sendFrame(l, 2, strData);
+					node.sendFrame(l,node.getId(), id,  2, strData);
 				}
 			}
 
-			//2 = random message, 1 = actual message
 		}
 	};
 

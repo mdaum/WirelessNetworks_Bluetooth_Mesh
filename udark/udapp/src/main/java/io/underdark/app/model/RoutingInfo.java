@@ -23,4 +23,9 @@ public class RoutingInfo {
     public void setStep(int val){
         step=val;
     }
+
+    @Override
+    public String toString() {
+        return "routerDest: " + routerDest + ", step: "+step;
+    }
 }
