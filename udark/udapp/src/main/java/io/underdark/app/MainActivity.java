@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity
 				if(message.getText().toString().equals("Message") || message.getText().toString().equals("")){
 					showToast("Please enter an amount of bytes (MB) to send");
 				}else {
-					long length = Long.parseLong(message.getText().toString()) * 1000000; //needs to be long in case we want to send < 1 MB
+					float length = Float.parseFloat(message.getText().toString()) * 1000000; //needs to be long in case we want to send < 1 MB
 					byte[] frameData = new byte[(int)length];
 					new Random().nextBytes(frameData);
 					node.sendFrame(l,node.getId(), id, 2, new String(frameData));
