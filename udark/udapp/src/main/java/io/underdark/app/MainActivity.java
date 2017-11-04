@@ -1,7 +1,9 @@
 package io.underdark.app;
 
 import android.app.ActionBar;
+import android.content.DialogInterface;
 import android.graphics.Color;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -10,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -41,16 +44,36 @@ public class MainActivity extends AppCompatActivity
 		Logger.init();
 		peersTextView = (TextView) findViewById(R.id.peersTextView);
 		framesTextView = (TextView) findViewById(R.id.framesTextView);
-		node = new Node(this);
-		buttons = new ArrayList<Button>();
 		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
 	}
 
 	@Override
 	protected void onStart()
 	{
+		final EditText id = new EditText(this);
+		final MainActivity t = this;
+		new AlertDialog.Builder(this)
+				.setTitle("Set ID")
+				.setMessage("Please enter a non-zero integer ID")
+				.setView(id)
+				.setPositiveButton("Submit", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int whichButton) {
+						String content = id.getText().toString();
+						node = new Node(t,Long.parseLong(content));
+						node.start();
+						refreshPeers();
+					}
+				})
+				.setNegativeButton("Give me Random", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int whichButton) {
+						node = new Node(t,0);
+						node.start();
+						refreshPeers();
+					}
+				})
+				.show();
+		buttons = new ArrayList<Button>();
 		super.onStart();
-		node.start();
 		Logger.info("STARTING\n");
 	}
 
@@ -124,7 +147,7 @@ public class MainActivity extends AppCompatActivity
 
 	public void refreshPeers()
 	{
-		peersTextView.setText(node.routingTable.size() + " connected");
+		peersTextView.setText(node.routingTable.size() + " connected, and your ID is "+node.getId());
 	}
 
 	public void refreshFrames()
