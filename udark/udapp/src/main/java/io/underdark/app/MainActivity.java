@@ -33,6 +33,8 @@ public class MainActivity extends AppCompatActivity
 	private TextView peersTextView;
 	private TextView framesTextView;
 	private int frameSize = 1028;
+	private int messageCount = 0;
+	private int maxMessagesShown = 10;
 	List<Button> buttons;
 	Node node;
 
@@ -165,8 +167,19 @@ public class MainActivity extends AppCompatActivity
 	public void showText(String text){
 		LinearLayout layout = (LinearLayout)findViewById(R.id.ll);
 		TextView textView = (TextView)findViewById(R.id.textMessage);
-		textView.setText("");
-		textView.setText(text);
+		String currentText = textView.getText().toString();
+		messageCount++;
+		if(messageCount > maxMessagesShown){
+			String [] messagePieces = currentText.split("--------------------");
+			currentText = "";
+			for(int i = 0; i < maxMessagesShown-2; i++){
+				currentText += messagePieces[i] + "--------------------" ;
+			}
+			currentText += messagePieces[messagePieces.length-2];
+		}
+		textView.setText(text + "\n--------------------\n" + currentText);
+		//textView.setText(text);
+
 	}
 
 
