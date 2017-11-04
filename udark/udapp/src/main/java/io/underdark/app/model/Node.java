@@ -31,13 +31,14 @@ public class Node implements TransportListener
 	public HashMap<Long, Link> idToLink = new HashMap<Long, Link>();
 	public HashMap<Long,RoutingInfo> routingTable = new HashMap<Long,RoutingInfo>();
 
-	public Node(MainActivity activity)
+	public Node(MainActivity activity, long id)
 	{
 		this.activity = activity;
 
 		do
 		{
-			nodeId = new Random().nextLong();
+			nodeId = id;
+			if(id==0) id = new Random().nextLong();
 		} while (nodeId == 0);
 
 		if(nodeId < 0)
