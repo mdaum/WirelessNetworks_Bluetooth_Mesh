@@ -137,6 +137,8 @@ public class MainActivity extends AppCompatActivity
 				Toast.LENGTH_SHORT).show();
 	}
 
+
+
 	public void showText(String text){
 		LinearLayout layout = (LinearLayout)findViewById(R.id.ll);
 		TextView textView = (TextView)findViewById(R.id.textMessage);

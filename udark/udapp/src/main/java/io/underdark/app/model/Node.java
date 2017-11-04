@@ -19,6 +19,8 @@ import io.underdark.transport.TransportListener;
 import io.underdark.util.nslogger.NSLogger;
 import io.underdark.util.nslogger.NSLoggerAdapter;
 
+import static impl.underdark.logging.Logger.log;
+
 public class Node implements TransportListener
 {
 	private boolean running;
@@ -132,7 +134,11 @@ public class Node implements TransportListener
     //protocolId: 2 = random message|writtenMessage
     public void sendFrame(Link link, long intendedSender, long intendedReciever, int protocolId, String str){ // only used for protocols > 1
         //protocol id | sender id | reciever id | payload       when in protocol > 1
-        String newStr = Integer.toString(protocolId) + "|" + intendedSender + "|" + intendedReciever + "|" + str;
+        String newStr = Integer.toString(protocolId)
+					+ "|" + intendedSender
+					+ "|" + intendedReciever
+					+ "|" + System.currentTimeMillis()
+					+ "|" + str;
         byte[] data = newStr.getBytes();
         Logger.info("SENDING TO " + link.getNodeId()+", "+"protocol: " + " "+protocolId);
         String toLog;
@@ -261,11 +267,22 @@ public class Node implements TransportListener
 				String [] messagePieces = message.split("\\|");
 				Long intendedSender = Long.parseLong(messagePieces[1]);
                 Long intendedReciever = Long.parseLong(messagePieces[2]);
-				if(this.nodeId == intendedReciever){
+				Long ogTimestamp = Long.parseLong(messagePieces[3]);
+                Long latency = System.currentTimeMillis() - ogTimestamp;
+
+                if(this.nodeId == intendedReciever){
 					String messageText = messagePieces[messagePieces.length-1];
 					Logger.info("Message size is "+frameData.length);
-                    if(frameData.length > 1000000) this.activity.showText("A random string with byte size "+frameData.length + " was recieved from "+intendedSender);
-					else this.activity.showText(intendedSender+": "+messageText);
+                    if(frameData.length > 1000000) this.activity.showText(
+                    				"latency = " + latency +
+									",\nsender = " + intendedSender +
+									",\nmessage = " + "A random string with byte size " +
+									messageText.length() + " was recieved from "+intendedSender);
+
+					else this.activity.showText("latency = " + latency +
+                                                ",\nsender = " + intendedSender +
+                                                ",\nmessage = " + messageText);
+
 				}
 				else{ //need to forward this message on instead of showing it
 					Logger.info("we are not the intended reciever for this message.");
