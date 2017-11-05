@@ -150,14 +150,14 @@ public class Node implements TransportListener
     }
 
 	public String encodeRoutingTable(){
-		String toRet = "";
-		for (Long id:routingTable.keySet()) {
-			toRet += id +"|";
-			toRet += routingTable.get(id).getRouterDest() + "|";
-			toRet += routingTable.get(id).getStep()+";";
-		}
-		return toRet.substring(0,toRet.length()-1); //chop off last ';'
+	String toRet = "";
+	for (Long id:routingTable.keySet()) {
+		toRet += id +"|";
+		toRet += routingTable.get(id).getRouterDest() + "|";
+		toRet += routingTable.get(id).getStep()+";";
 	}
+	return toRet.substring(0,toRet.length()-1); //chop off last ';'
+}
 
 	//region TransportListener
 	@Override
@@ -171,15 +171,12 @@ public class Node implements TransportListener
 	{
 		links.add(link);
 		idToLink.put(link.getNodeId(),link);
-		routingTable.put(link.getNodeId(),new RoutingInfo(link.getNodeId(),1));
+		routingTable.put((long)2,new RoutingInfo(2,1));
+		routingTable.put((long)3,new RoutingInfo(2,1));
+		routingTable.put((long)4,new RoutingInfo(2,1));
+		routingTable.put((long)5,new RoutingInfo(2,1));
 		activity.refreshPeers();
 		activity.refreshButtons();
-		String rt = encodeRoutingTable();
-		//now send encoded routing table to each adjacent node
-		for (Link l:
-			 links) {
-			sendFrame(l,0,rt);
-		}
 	}
 
 	@Override
