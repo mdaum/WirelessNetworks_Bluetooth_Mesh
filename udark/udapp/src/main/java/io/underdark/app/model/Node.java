@@ -286,6 +286,7 @@ public class Node implements TransportListener
 					Logger.info("we are not the intended reciever for this message.");
                     Link route = idToLink.get(routingTable.get(intendedReciever).getRouterDest());
 					Logger.info("going to forward message on to "+route.getNodeId());
+					this.activity.showText("going to forward message from "+ intendedSender + " intended for "+intendedReciever + "\nforwarding to "+route.getNodeId());
                     route.sendFrame(frameData); //forward the message on....don't need to reprocess info
                 }
 				break;
