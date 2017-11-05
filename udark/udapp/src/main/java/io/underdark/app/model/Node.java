@@ -274,11 +274,11 @@ public class Node implements TransportListener
                 if(this.nodeId == intendedReciever){
 					String messageText = messagePieces[messagePieces.length-1];
 					Logger.info("Message size is "+frameData.length);
-                    if(frameData.length > 1000000) this.activity.showText(
+                    if(frameData.length > 100000) this.activity.showText(
                     				"latency = " + latency +
 									",\nsender = " + intendedSender +
 									",\nmessage = " + "A random string with byte size " +
-									messageText.length() + " was recieved from "+intendedSender);
+									frameData.length + " was recieved from "+intendedSender);
 
 					else this.activity.showText("latency = " + latency +
                                                 ",\nsender = " + intendedSender +
