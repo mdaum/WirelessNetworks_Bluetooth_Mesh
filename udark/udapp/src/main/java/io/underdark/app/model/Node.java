@@ -171,10 +171,36 @@ public class Node implements TransportListener
 	{
 		links.add(link);
 		idToLink.put(link.getNodeId(),link);
+		//rt for 1
+		/*routingTable.put((long)2,new RoutingInfo(2,1));
+		routingTable.put((long)3,new RoutingInfo(2,2));
+		routingTable.put((long)4,new RoutingInfo(2,3));
+		routingTable.put((long)5,new RoutingInfo(2,4));*/
+
+		//rt for 2
+		/*routingTable.put((long)1,new RoutingInfo(1,1));
+		routingTable.put((long)3,new RoutingInfo(3,1));
+		routingTable.put((long)4,new RoutingInfo(3,2));
+		routingTable.put((long)5,new RoutingInfo(3,3));*/
+
+		//tr for 3
+		/*routingTable.put((long)1,new RoutingInfo(2,2));
 		routingTable.put((long)2,new RoutingInfo(2,1));
-		routingTable.put((long)3,new RoutingInfo(2,1));
-		routingTable.put((long)4,new RoutingInfo(2,1));
-		routingTable.put((long)5,new RoutingInfo(2,1));
+		routingTable.put((long)4,new RoutingInfo(4,1));
+		routingTable.put((long)5,new RoutingInfo(4,2));*/
+
+		//tr for 4
+		/*routingTable.put((long)1,new RoutingInfo(3,3));
+		routingTable.put((long)2,new RoutingInfo(3,2));
+		routingTable.put((long)3,new RoutingInfo(3,1));
+		routingTable.put((long)5,new RoutingInfo(5,1));*/
+
+		//tr for 5
+		routingTable.put((long)1,new RoutingInfo(4,4));
+		routingTable.put((long)2,new RoutingInfo(4,3));
+		routingTable.put((long)3,new RoutingInfo(4,2));
+		routingTable.put((long)4,new RoutingInfo(4,1));
+
 		activity.refreshPeers();
 		activity.refreshButtons();
 	}
