@@ -172,22 +172,22 @@ public class Node implements TransportListener
 		links.add(link);
 		idToLink.put(link.getNodeId(),link);
 		//rt for 1
-		/*routingTable.put((long)2,new RoutingInfo(2,1));
-		routingTable.put((long)3,new RoutingInfo(2,2));
-		routingTable.put((long)4,new RoutingInfo(2,3));
-		routingTable.put((long)5,new RoutingInfo(2,4));*/
+		//routingTable.put((long)2,new RoutingInfo(2,1));
+		///routingTable.put((long)3,new RoutingInfo(2,2));
+		//routingTable.put((long)4,new RoutingInfo(2,3));
+		//routingTable.put((long)5,new RoutingInfo(2,4));
 
 		//rt for 2
-		/*routingTable.put((long)1,new RoutingInfo(1,1));
-		routingTable.put((long)3,new RoutingInfo(3,1));
-		routingTable.put((long)4,new RoutingInfo(3,2));
-		routingTable.put((long)5,new RoutingInfo(3,3));*/
+//		routingTable.put((long)1,new RoutingInfo(1,1));
+//		routingTable.put((long)3,new RoutingInfo(3,1));
+		//routingTable.put((long)4,new RoutingInfo(3,2));
+		//routingTable.put((long)5,new RoutingInfo(3,3));
 
 		//tr for 3
-		/*routingTable.put((long)1,new RoutingInfo(2,2));
+		routingTable.put((long)1,new RoutingInfo(2,2));
 		routingTable.put((long)2,new RoutingInfo(2,1));
 		routingTable.put((long)4,new RoutingInfo(4,1));
-		routingTable.put((long)5,new RoutingInfo(4,2));*/
+		routingTable.put((long)5,new RoutingInfo(4,2));
 
 		//tr for 4
 		/*routingTable.put((long)1,new RoutingInfo(3,3));
@@ -196,10 +196,10 @@ public class Node implements TransportListener
 		routingTable.put((long)5,new RoutingInfo(5,1));*/
 
 		//tr for 5
-		routingTable.put((long)1,new RoutingInfo(4,4));
+		/*routingTable.put((long)1,new RoutingInfo(4,4));
 		routingTable.put((long)2,new RoutingInfo(4,3));
 		routingTable.put((long)3,new RoutingInfo(4,2));
-		routingTable.put((long)4,new RoutingInfo(4,1));
+		routingTable.put((long)4,new RoutingInfo(4,1));*/
 
 		activity.refreshPeers();
 		activity.refreshButtons();
@@ -315,6 +315,31 @@ public class Node implements TransportListener
 					this.activity.showText("going to forward message from "+ intendedSender + " intended for "+intendedReciever + "\nforwarding to "+route.getNodeId());
                     route.sendFrame(frameData); //forward the message on....don't need to reprocess info
                 }
+				break;
+			case 3:
+				messagePieces = message.split("\\|");
+				intendedSender = Long.parseLong(messagePieces[1]);
+				intendedReciever = Long.parseLong(messagePieces[2]);
+				ogTimestamp = Long.parseLong(messagePieces[3]);
+				latency = System.currentTimeMillis() - ogTimestamp;
+				if(this.nodeId == intendedReciever){
+					String messageText = messagePieces[messagePieces.length-1];
+					Logger.info("Message size is "+frameData.length);
+					this.activity.showText(
+							"latency = " + latency +
+							",\nsender = " + intendedSender +
+							",\nmessage = " + "A picture was sent to you, length " +
+							messageText.length());
+					this.activity.setEncodedImageToImageView(messageText);
+
+				}
+				else{ //need to forward this message on instead of showing it
+					Logger.info("we are not the intended reciever for this message.");
+					Link route = idToLink.get(routingTable.get(intendedReciever).getRouterDest());
+					Logger.info("going to forward message on to "+route.getNodeId());
+					this.activity.showText("going to forward message from "+ intendedSender + " intended for "+intendedReciever + "\nforwarding to "+route.getNodeId());
+					route.sendFrame(frameData); //forward the message on....don't need to reprocess info
+				}
 				break;
 
 			default: activity.showToast("invalid frame recieved");

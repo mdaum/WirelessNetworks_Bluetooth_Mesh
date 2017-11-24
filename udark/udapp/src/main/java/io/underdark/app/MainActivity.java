@@ -2,10 +2,18 @@ package io.underdark.app;
 
 import android.app.ActionBar;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.hardware.Camera;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -13,6 +21,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -20,12 +29,21 @@ import android.widget.Toast;
 
 import io.underdark.app.log.*;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import io.underdark.app.model.Node;
 import io.underdark.transport.Link;
+
+import static android.R.attr.id;
+import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE;
 
 
 public class MainActivity extends AppCompatActivity
@@ -37,6 +55,7 @@ public class MainActivity extends AppCompatActivity
 	private int maxMessagesShown = 10;
 	List<Button> buttons;
 	Node node;
+	static final int REQUEST_IMAGE_CAPTURE = 1;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -88,17 +107,24 @@ public class MainActivity extends AppCompatActivity
 
 			TextView message = (TextView)findViewById(R.id.messageOrBytes);
 			Switch randomBytes = (Switch) findViewById(R.id.randomBytes);
+			Switch pictureSwitch = (Switch) findViewById(R.id.pictureSwitch);
 			//if the randombytes switch is activated send a sequence of random bytes
-			if(randomBytes.isChecked()){
-				if(message.getText().toString().equals("Message") || message.getText().toString().equals("")){
+			if(randomBytes.isChecked()) {
+				if (message.getText().toString().equals("Message") || message.getText().toString().equals("")) {
 					showToast("Please enter an amount of bytes (MB) to send");
-				}else {
+				} else {
 					float length = Float.parseFloat(message.getText().toString()) * 1000000; //needs to be long in case we want to send < 1 MB
-					byte[] frameData = new byte[(int)length];
+					byte[] frameData = new byte[(int) length];
 					new Random().nextBytes(frameData);
-					node.sendFrame(l,node.getId(), id, 2, new String(frameData));
+					node.sendFrame(l, node.getId(), id, 2, new String(frameData));
 				}
 				//otherwise send a message
+			//sending an image
+			}else if (pictureSwitch.isChecked()){
+
+				String strData = message.getText().toString();
+				node.sendFrame(l,node.getId(), id,  3, strData);
+
 			}else{
 				if(message.getText().toString().equals("Message") || message.getText().toString().equals("")){
 					showToast("Please enter a message to send");
@@ -199,6 +225,68 @@ public class MainActivity extends AppCompatActivity
 			buttons.add(toAdd);
 			layout.addView(toAdd,new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.WRAP_CONTENT));
 		}
+	}
+
+	public void takePicture(View v){
+		dispatchTakePictureIntent();
+	}
+
+	private void dispatchTakePictureIntent() {
+		Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+		if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+			startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+		}
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+			//Bundle extras = data.getExtras();
+			//Bitmap imageBitmap = (Bitmap) extras.get("data");
+			//ImageView mImageView = (ImageView) findViewById(R.id.photoView);
+			//mImageView.setImageBitmap(imageBitmap);
+
+			final Uri imageUri = data.getData();
+			InputStream imageStream = null;
+			try {
+				imageStream = getContentResolver().openInputStream(imageUri);
+			}catch (Exception e){
+				e.printStackTrace();
+			}
+
+			final Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+			String encodedImage = encodeImage(selectedImage);
+			TextView message = (TextView)findViewById(R.id.messageOrBytes);
+			message.setText(encodedImage);
+
+			//decode base 64 to image
+			/*byte[] decodedString = Base64.decode(encodedImage, Base64.DEFAULT);
+			Bitmap imageBitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
+			ImageView mImageView = (ImageView) findViewById(R.id.photoView);
+			mImageView.setImageBitmap(imageBitmap);*/
+
+			//Log.v("BITMAP", imageBitmap.toString());
+			//Log.v("BITMAP 2 ", imageBitmap2.toString());
+		}
+	}
+	private String encodeImage(Bitmap bm)
+	{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		bm.compress(Bitmap.CompressFormat.JPEG,100,baos);
+		byte[] b = baos.toByteArray();
+		String encImage = Base64.encodeToString(b, Base64.DEFAULT);
+
+		return encImage;
+	}
+
+	public void setEncodedImageToImageView(String encodedImage){
+		//decode base 64 to image
+		byte[] decodedString = Base64.decode(encodedImage, Base64.DEFAULT);
+		Bitmap imageBitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
+		ImageView mImageView = (ImageView) findViewById(R.id.photoView);
+		mImageView.setImageBitmap(imageBitmap);
 	}
 
 } // MainActivity
